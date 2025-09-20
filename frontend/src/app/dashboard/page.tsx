@@ -2,29 +2,22 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  Container,
-  Grid,
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  Box,
-  Chip,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemSecondaryAction,
-  IconButton,
-  CircularProgress,
-  Alert,
-} from '@mui/material';
-import {
-  Add,
-  Description,
-  Reply,
-  Visibility,
-} from '@mui/icons-material';
+import Container from '@mui/material/Container';
+import Grid from '@mui/material/Unstable_Grid2'; // ✅ Grid2
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+import Box from '@mui/material/Box';
+import Chip from '@mui/material/Chip';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
+import ListItemSecondaryAction from '@mui/material/ListItemSecondaryAction';
+import IconButton from '@mui/material/IconButton';
+import CircularProgress from '@mui/material/CircularProgress';
+import Alert from '@mui/material/Alert';
+import { Add, Description, Reply, Visibility } from '@mui/icons-material';
 import { useAuth } from '@/contexts/AuthContext';
 import { apiService } from '@/services/api';
 import { RFP, RFPResponse } from '@/types';
@@ -60,15 +53,14 @@ const DashboardPage: React.FC = () => {
     }
   }, [user]);
 
-  const getStatusColor = (
-    status: string
-  ): 'default' | 'error' | 'info' | 'success' | 'warning' => {
+  const getStatusColor = (status: string) => {
     switch (status) {
       case 'published':
-      case 'approved':
         return 'success';
       case 'draft':
         return 'default';
+      case 'approved':
+        return 'success';
       case 'rejected':
         return 'error';
       case 'submitted':
@@ -95,42 +87,34 @@ const DashboardPage: React.FC = () => {
           Welcome back, {user?.firstName}!
         </Typography>
         <Typography variant="subtitle1" color="text.secondary" gutterBottom>
-          {user?.role === 'buyer' 
+          {user?.role === 'buyer'
             ? 'Manage your RFPs and review supplier responses'
             : 'Browse available RFPs and manage your responses'}
         </Typography>
 
         {error && (
-          <Alert
-            severity="error"
-            sx={{ mb: 3 }}
-            action={
-              <Button color="inherit" size="small" onClick={() => location.reload()}>
-                Retry
-              </Button>
-            }
-          >
+          <Alert severity="error" sx={{ mb: 3 }}>
             {error}
           </Alert>
         )}
 
         <Grid container spacing={3}>
           {/* Quick Stats */}
-          <Grid item xs={12} md={3}>
+          <Grid xs={12} md={3}>
             <Card>
               <CardContent>
                 <Typography color="textSecondary" gutterBottom>
                   Total RFPs
                 </Typography>
                 <Typography variant="h4">
-                  {user?.role === 'buyer' 
-                    ? rfps.filter(rfp => rfp.buyerId === user.id).length
-                    : rfps.filter(rfp => rfp.isPublic).length}
+                  {user?.role === 'buyer'
+                    ? rfps.filter((rfp) => rfp.buyerId === user.id).length
+                    : rfps.filter((rfp) => rfp.isPublic).length}
                 </Typography>
               </CardContent>
             </Card>
           </Grid>
-          <Grid item xs={12} md={3}>
+          <Grid xs={12} md={3}>
             <Card>
               <CardContent>
                 <Typography color="textSecondary" gutterBottom>
@@ -140,33 +124,33 @@ const DashboardPage: React.FC = () => {
               </CardContent>
             </Card>
           </Grid>
-          <Grid item xs={12} md={3}>
+          <Grid xs={12} md={3}>
             <Card>
               <CardContent>
                 <Typography color="textSecondary" gutterBottom>
                   Active RFPs
                 </Typography>
                 <Typography variant="h4">
-                  {rfps.filter(rfp => rfp.status === 'published').length}
+                  {rfps.filter((rfp) => rfp.status === 'published').length}
                 </Typography>
               </CardContent>
             </Card>
           </Grid>
-          <Grid item xs={12} md={3}>
+          <Grid xs={12} md={3}>
             <Card>
               <CardContent>
                 <Typography color="textSecondary" gutterBottom>
                   Pending Reviews
                 </Typography>
                 <Typography variant="h4">
-                  {responses.filter(resp => resp.status === 'submitted').length}
+                  {responses.filter((resp) => resp.status === 'submitted').length}
                 </Typography>
               </CardContent>
             </Card>
           </Grid>
 
           {/* Recent RFPs */}
-          <Grid item xs={12} md={6}>
+          <Grid xs={12} md={6}>
             <Card>
               <CardContent>
                 <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
@@ -175,28 +159,31 @@ const DashboardPage: React.FC = () => {
                     View All
                   </Button>
                 </Box>
-                {rfps.length === 0 ? (
-                  <Typography variant="body2" color="text.secondary">
-                    No RFPs found
-                  </Typography>
-                ) : (
-                  <List>
-                    {rfps.slice(0, 3).map(rfp => (
+                <List>
+                  {rfps.length === 0 ? (
+                    <Typography variant="body2" color="text.secondary">
+                      No RFPs found
+                    </Typography>
+                  ) : (
+                    rfps.slice(0, 3).map((rfp) => (
                       <ListItem key={rfp.id} divider>
                         <ListItemText
                           primary={rfp.title}
                           secondary={
                             <Box>
                               <Typography variant="body2" color="text.secondary">
-                                {rfp.category} •{' '}
-                                {rfp.deadline
-                                  ? new Date(rfp.deadline).toLocaleDateString()
-                                  : 'No deadline'}
+                                {rfp.category}{' '}
+                                {rfp.deadline && `• ${new Date(rfp.deadline).toLocaleDateString()}`}
                               </Typography>
                               <Chip
                                 label={rfp.status.replace('_', ' ').toUpperCase()}
                                 size="small"
-                                color={getStatusColor(rfp.status)}
+                                color={getStatusColor(rfp.status) as
+                                  | 'default'
+                                  | 'error'
+                                  | 'info'
+                                  | 'success'
+                                  | 'warning'}
                                 sx={{ mt: 0.5 }}
                               />
                             </Box>
@@ -208,15 +195,15 @@ const DashboardPage: React.FC = () => {
                           </IconButton>
                         </ListItemSecondaryAction>
                       </ListItem>
-                    ))}
-                  </List>
-                )}
+                    ))
+                  )}
+                </List>
               </CardContent>
             </Card>
           </Grid>
 
           {/* Recent Responses */}
-          <Grid item xs={12} md={6}>
+          <Grid xs={12} md={6}>
             <Card>
               <CardContent>
                 <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
@@ -225,13 +212,13 @@ const DashboardPage: React.FC = () => {
                     View All
                   </Button>
                 </Box>
-                {responses.length === 0 ? (
-                  <Typography variant="body2" color="text.secondary">
-                    No responses found
-                  </Typography>
-                ) : (
-                  <List>
-                    {responses.slice(0, 3).map(response => (
+                <List>
+                  {responses.length === 0 ? (
+                    <Typography variant="body2" color="text.secondary">
+                      No responses found
+                    </Typography>
+                  ) : (
+                    responses.slice(0, 3).map((response) => (
                       <ListItem key={response.id} divider>
                         <ListItemText
                           primary={response.rfp?.title || 'Unknown RFP'}
@@ -244,7 +231,12 @@ const DashboardPage: React.FC = () => {
                               <Chip
                                 label={response.status.replace('_', ' ').toUpperCase()}
                                 size="small"
-                                color={getStatusColor(response.status)}
+                                color={getStatusColor(response.status) as
+                                  | 'default'
+                                  | 'error'
+                                  | 'info'
+                                  | 'success'
+                                  | 'warning'}
                                 sx={{ mt: 0.5 }}
                               />
                             </Box>
@@ -259,15 +251,15 @@ const DashboardPage: React.FC = () => {
                           </IconButton>
                         </ListItemSecondaryAction>
                       </ListItem>
-                    ))}
-                  </List>
-                )}
+                    ))
+                  )}
+                </List>
               </CardContent>
             </Card>
           </Grid>
 
           {/* Quick Actions */}
-          <Grid item xs={12}>
+          <Grid xs={12}>
             <Card>
               <CardContent>
                 <Typography variant="h6" gutterBottom>
