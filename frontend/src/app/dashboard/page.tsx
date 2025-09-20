@@ -23,9 +23,7 @@ import {
   Add,
   Description,
   Reply,
-  TrendingUp,
   Visibility,
-  Edit,
 } from '@mui/icons-material';
 import { useAuth } from '@/contexts/AuthContext';
 import { apiService } from '@/services/api';
@@ -62,14 +60,15 @@ const DashboardPage: React.FC = () => {
     }
   }, [user]);
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (
+    status: string
+  ): 'default' | 'error' | 'info' | 'success' | 'warning' => {
     switch (status) {
       case 'published':
+      case 'approved':
         return 'success';
       case 'draft':
         return 'default';
-      case 'approved':
-        return 'success';
       case 'rejected':
         return 'error';
       case 'submitted':
@@ -98,12 +97,19 @@ const DashboardPage: React.FC = () => {
         <Typography variant="subtitle1" color="text.secondary" gutterBottom>
           {user?.role === 'buyer' 
             ? 'Manage your RFPs and review supplier responses'
-            : 'Browse available RFPs and manage your responses'
-          }
+            : 'Browse available RFPs and manage your responses'}
         </Typography>
 
         {error && (
-          <Alert severity="error" sx={{ mb: 3 }}>
+          <Alert
+            severity="error"
+            sx={{ mb: 3 }}
+            action={
+              <Button color="inherit" size="small" onClick={() => location.reload()}>
+                Retry
+              </Button>
+            }
+          >
             {error}
           </Alert>
         )}
@@ -119,8 +125,7 @@ const DashboardPage: React.FC = () => {
                 <Typography variant="h4">
                   {user?.role === 'buyer' 
                     ? rfps.filter(rfp => rfp.buyerId === user.id).length
-                    : rfps.filter(rfp => rfp.isPublic).length
-                  }
+                    : rfps.filter(rfp => rfp.isPublic).length}
                 </Typography>
               </CardContent>
             </Card>
@@ -131,9 +136,7 @@ const DashboardPage: React.FC = () => {
                 <Typography color="textSecondary" gutterBottom>
                   Responses
                 </Typography>
-                <Typography variant="h4">
-                  {responses.length}
-                </Typography>
+                <Typography variant="h4">{responses.length}</Typography>
               </CardContent>
             </Card>
           </Grid>
@@ -167,46 +170,47 @@ const DashboardPage: React.FC = () => {
             <Card>
               <CardContent>
                 <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                  <Typography variant="h6">
-                    Recent RFPs
-                  </Typography>
-                  <Button
-                    size="small"
-                    onClick={() => router.push('/rfps')}
-                  >
+                  <Typography variant="h6">Recent RFPs</Typography>
+                  <Button size="small" onClick={() => router.push('/rfps')}>
                     View All
                   </Button>
                 </Box>
-                <List>
-                  {rfps.slice(0, 3).map((rfp) => (
-                    <ListItem key={rfp.id} divider>
-                      <ListItemText
-                        primary={rfp.title}
-                        secondary={
-                          <Box>
-                            <Typography variant="body2" color="text.secondary">
-                              {rfp.category} • {new Date(rfp.deadline).toLocaleDateString()}
-                            </Typography>
-                            <Chip
-                              label={rfp.status.replace('_', ' ').toUpperCase()}
-                              size="small"
-                              color={getStatusColor(rfp.status) as any}
-                              sx={{ mt: 0.5 }}
-                            />
-                          </Box>
-                        }
-                      />
-                      <ListItemSecondaryAction>
-                        <IconButton
-                          edge="end"
-                          onClick={() => router.push(`/rfps/${rfp.id}`)}
-                        >
-                          <Visibility />
-                        </IconButton>
-                      </ListItemSecondaryAction>
-                    </ListItem>
-                  ))}
-                </List>
+                {rfps.length === 0 ? (
+                  <Typography variant="body2" color="text.secondary">
+                    No RFPs found
+                  </Typography>
+                ) : (
+                  <List>
+                    {rfps.slice(0, 3).map(rfp => (
+                      <ListItem key={rfp.id} divider>
+                        <ListItemText
+                          primary={rfp.title}
+                          secondary={
+                            <Box>
+                              <Typography variant="body2" color="text.secondary">
+                                {rfp.category} •{' '}
+                                {rfp.deadline
+                                  ? new Date(rfp.deadline).toLocaleDateString()
+                                  : 'No deadline'}
+                              </Typography>
+                              <Chip
+                                label={rfp.status.replace('_', ' ').toUpperCase()}
+                                size="small"
+                                color={getStatusColor(rfp.status)}
+                                sx={{ mt: 0.5 }}
+                              />
+                            </Box>
+                          }
+                        />
+                        <ListItemSecondaryAction>
+                          <IconButton edge="end" onClick={() => router.push(`/rfps/${rfp.id}`)}>
+                            <Visibility />
+                          </IconButton>
+                        </ListItemSecondaryAction>
+                      </ListItem>
+                    ))}
+                  </List>
+                )}
               </CardContent>
             </Card>
           </Grid>
@@ -216,47 +220,48 @@ const DashboardPage: React.FC = () => {
             <Card>
               <CardContent>
                 <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                  <Typography variant="h6">
-                    Recent Responses
-                  </Typography>
-                  <Button
-                    size="small"
-                    onClick={() => router.push('/responses')}
-                  >
+                  <Typography variant="h6">Recent Responses</Typography>
+                  <Button size="small" onClick={() => router.push('/responses')}>
                     View All
                   </Button>
                 </Box>
-                <List>
-                  {responses.slice(0, 3).map((response) => (
-                    <ListItem key={response.id} divider>
-                      <ListItemText
-                        primary={response.rfp?.title || 'Unknown RFP'}
-                        secondary={
-                          <Box>
-                            <Typography variant="body2" color="text.secondary">
-                              {response.supplier?.firstName} {response.supplier?.lastName}
-                              {response.supplier?.company && ` • ${response.supplier.company}`}
-                            </Typography>
-                            <Chip
-                              label={response.status.replace('_', ' ').toUpperCase()}
-                              size="small"
-                              color={getStatusColor(response.status) as any}
-                              sx={{ mt: 0.5 }}
-                            />
-                          </Box>
-                        }
-                      />
-                      <ListItemSecondaryAction>
-                        <IconButton
-                          edge="end"
-                          onClick={() => router.push(`/responses/${response.id}`)}
-                        >
-                          <Visibility />
-                        </IconButton>
-                      </ListItemSecondaryAction>
-                    </ListItem>
-                  ))}
-                </List>
+                {responses.length === 0 ? (
+                  <Typography variant="body2" color="text.secondary">
+                    No responses found
+                  </Typography>
+                ) : (
+                  <List>
+                    {responses.slice(0, 3).map(response => (
+                      <ListItem key={response.id} divider>
+                        <ListItemText
+                          primary={response.rfp?.title || 'Unknown RFP'}
+                          secondary={
+                            <Box>
+                              <Typography variant="body2" color="text.secondary">
+                                {response.supplier?.firstName} {response.supplier?.lastName}
+                                {response.supplier?.company && ` • ${response.supplier.company}`}
+                              </Typography>
+                              <Chip
+                                label={response.status.replace('_', ' ').toUpperCase()}
+                                size="small"
+                                color={getStatusColor(response.status)}
+                                sx={{ mt: 0.5 }}
+                              />
+                            </Box>
+                          }
+                        />
+                        <ListItemSecondaryAction>
+                          <IconButton
+                            edge="end"
+                            onClick={() => router.push(`/responses/${response.id}`)}
+                          >
+                            <Visibility />
+                          </IconButton>
+                        </ListItemSecondaryAction>
+                      </ListItem>
+                    ))}
+                  </List>
+                )}
               </CardContent>
             </Card>
           </Grid>
@@ -303,4 +308,3 @@ const DashboardPage: React.FC = () => {
 };
 
 export default DashboardPage;
-
